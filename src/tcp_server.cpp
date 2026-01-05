@@ -1,4 +1,5 @@
 #include "tcp_server.h"
+#include "my_types.h"
 
 void create_server_connection()
 {
@@ -12,7 +13,7 @@ void create_server_connection()
     }
 
     // init server address
-    sockaddr_in server_address;
+    sockaddr_in server_address{};
     server_address.sin_family = AF_INET;
     server_address.sin_port = htons(8080);
     server_address.sin_addr.s_addr = INADDR_ANY;
@@ -28,6 +29,7 @@ void create_server_connection()
         throw std::runtime_error("Error listening to common connections");
     }
 
+    // event loop to listen to connections
     while (true)
     {
         // accept incoming client connection

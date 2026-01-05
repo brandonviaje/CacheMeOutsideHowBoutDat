@@ -9,6 +9,6 @@
 #include <iostream>
 #include <unistd.h>
 
-#define MAXCONN 4096
+void create_client_connection();
 
 #endif
