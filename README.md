@@ -13,7 +13,7 @@ This project is a ground-up implementation inspired by **Redis**, designed to de
 * Event-driven server design
 * Persistence and durability strategies
 
-The goal is **learning-first**, not feature parity — every component is intentionally built by hand.
+The goal is **learning-first**, not feature parity. 
 
 ---
 
@@ -53,20 +53,14 @@ The goal is **learning-first**, not feature parity — every component is intent
 ## Project Structure
 
 ```text
-redis/
-├── include/        # Public headers
-│   ├── net/        # Socket & networking interfaces
-│   ├── core/       # Core data structures
-│   └── utils/      # Helpers & utilities
+CacheMeOutsideHowBoutDat/
 ├── src/            # Implementation files
-│   ├── net/
-│   ├── core/
+│   ├── net/        # networking (tcp client,server)
+│   ├── core/       # core components ( RESP parser, etc)
 │   └── main.cpp
 ├── tests/          # Unit & integration tests
-├── CMakeLists.txt
 └── README.md
 ```
-
 ---
 
 ## Tech Stack
@@ -139,4 +133,5 @@ It is a **learning project** built to explore systems programming concepts.
 
 Built with curiosity and caffeine ☕
 
-If you're into systems programming, networking, or databases — welcome 👋
+If you're into systems programming, networking, or databases: welcome 👋
+
