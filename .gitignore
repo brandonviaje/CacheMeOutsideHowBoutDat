@@ -1,0 +1,4 @@
+.prettierrc
+.vscode/
+.clang-format
+*.exe   

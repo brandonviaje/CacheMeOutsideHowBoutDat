@@ -1,5 +1,5 @@
-#include "tcp_server.h"
 #include "tcp_client.h"
+#include "tcp_server.h"
 #include <stdlib.h>
 
 int main()

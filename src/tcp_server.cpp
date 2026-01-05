@@ -35,7 +35,8 @@ void create_server_connection()
         // accept incoming client connection
         sockaddr_in client_address{};
         socklen_t client_len = sizeof(client_address);
-        int client_connection = accept(server_socket, (struct sockaddr *)&client_address, &client_len);
+        int client_connection =
+            accept(server_socket, (struct sockaddr *)&client_address, &client_len);
 
         // check for errors
         if (client_connection == -1)
