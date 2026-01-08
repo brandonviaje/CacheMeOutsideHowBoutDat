@@ -3,8 +3,8 @@ CXX = g++
 CXXFLAGS = -std=c++17 -Wall -Wextra -I./src/utils
 
 # Source files
-SERVER_SRC = src/tcp_server.cpp src/utils.cpp
-CLIENT_SRC = src/tcp_client.cpp src/utils.cpp  
+SERVER_SRC = src/tcp_server.cpp src/utils.cpp src/buffer.cpp
+CLIENT_SRC = src/tcp_client.cpp src/utils.cpp src/buffer.cpp 
 
 # Output binaries
 SERVER_BIN = server

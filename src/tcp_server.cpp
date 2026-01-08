@@ -4,41 +4,40 @@
 
 bool process_request(Connection* conn)
 {
-    if(conn->incoming.size() < 4)
+    if (conn->incoming.size() < 4)
     {
         return false;
     }
-
-    uint32_t len {};
-    std::memcpy(&len,conn->incoming.data(),4);
+        
+    uint32_t len{};
+    std::memcpy(&len, conn->incoming.data(), 4);
 
     // reject long msg size
-    if(len > MAX_MSG_SIZE)
+    if (len > MAX_MSG_SIZE)
     {
         msg("Too Long");
         conn->want_close = true;
         return false;   // want close
     }
 
-    if(4 + len > conn->incoming.size())
+    if (4 + len > conn->incoming.size())
     {
         return false;   // want read
     }
 
-    // parse request
-    const uint8_t* request {&conn->incoming[4]};
+    const uint8_t* request {conn->incoming.data() + 4};
 
     // TODO: implement application logic with the request
     printf("client says: len:%d data:%.*s\n", len, len < 100 ? len : 100, request);
 
     // generate response
-    buffer_append(conn->outgoing, (const uint8_t *)&len, 4);
-    buffer_append(conn->outgoing, request, len);
+    conn->outgoing.append(reinterpret_cast<uint8_t*>(&len), 4);
+    conn->outgoing.append(request, len);
 
     // remove request message
-    buffer_consume(conn->incoming, 4 + len);
+    conn->incoming.consume(4 + len);
 
-    return true;        
+    return true;
 }
 
 Connection* handle_accept(int fd)
@@ -78,7 +77,7 @@ void handle_read(Connection* conn)
 
     if(status == 0)
     {
-        if(conn->incoming.size() == 0)
+        if (conn->incoming.size() == 0)
         {
             std::cout << "Client closed." << '\n';
         }
@@ -90,7 +89,7 @@ void handle_read(Connection* conn)
         return;
     }
 
-    buffer_append(conn->incoming, buffer, static_cast<size_t>(status));
+    conn->incoming.append(buffer, static_cast<size_t>(status));
 
     while(process_request(conn)) {}
 
@@ -105,15 +104,24 @@ void handle_read(Connection* conn)
 void handle_write(Connection* conn)
 {
     // check if outgoing is empty
-    if(conn->outgoing.empty()) 
+    size_t out_size {conn->outgoing.size()};
+
+    if(out_size == 0) 
     {
-        conn->want_write = false;  // no more data to write
-        conn->want_read = true;    // ready to read more
+        conn->want_write = false;
+        conn->want_read = true;
         return;
     }
 
-    ssize_t status{send(conn->fd, conn->outgoing.data(), conn->outgoing.size(), 0)};
+    ssize_t status{send(conn->fd, conn->outgoing.data(), out_size, 0)};
 
+    // check if socket is ready
+    if(status == -1 && status == EAGAIN)
+    {
+        return;
+    }
+
+    // handle error
     if(status == -1)
     {
         std::cerr << "Error sending bytes to stream" << '\n';
@@ -122,7 +130,7 @@ void handle_write(Connection* conn)
     }
 
     // remove written data from outgoing
-    buffer_consume(conn->outgoing, static_cast<ssize_t>(status));
+    conn->outgoing.consume(static_cast<size_t>(status));
 }
 
 void create_server_connection()
@@ -181,11 +189,15 @@ void create_server_connection()
 
                 // if this conn wants to read add POLLIN flag
                 if (conn->want_read)
+                {
                     pfd.events |= POLLIN;
-
+                }
+                    
                 // if this conn wants to write add POLLOUT flag
                 if (conn->want_write)
+                {
                     pfd.events |= POLLOUT;
+                }
 
                 // add client socket to poll list
                 poll_args.push_back(pfd);
@@ -203,7 +215,9 @@ void create_server_connection()
             if(poll_args[0].revents)
             {
 
-                if(Connection* conn = handle_accept(server_socket))
+                Connection* conn = handle_accept(server_socket);
+
+                if(conn)
                 {
                     // put it into map
                     if(client_connections.size() <= (size_t) conn->fd)
@@ -243,7 +257,6 @@ void create_server_connection()
                     delete conn;
                 }
             }
-
         }   
 
         close(server_socket);

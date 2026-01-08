@@ -3,6 +3,7 @@
 
 #include "my_types.h"   
 #include "utils.h"         
+#include "buffer.h"
 #include <string>       
 #include <stdexcept>    
 #include <cstring>      
@@ -20,8 +21,8 @@ struct Connection
     bool want_read = false;
     bool want_write = false;
     bool want_close = false;
-    std::vector<uint8_t>incoming;
-    std::vector<uint8_t>outgoing;
+    Buffer incoming;
+    Buffer outgoing;
 };
 
 bool process_request(Connection* conn);

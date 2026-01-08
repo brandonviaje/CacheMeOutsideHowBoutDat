@@ -2,6 +2,7 @@
 #define UTILS_H
 
 #include "my_types.h"
+#include "buffer.h"
 #include <cstdio>      
 #include <cstring>     
 #include <cassert>     
@@ -12,8 +13,6 @@
 #include <fcntl.h>
 
 void msg(const char* msg);
-void buffer_append(std::vector<uint8_t> &buffer, const uint8_t *data, size_t len);
-void buffer_consume(std::vector<uint8_t> &buffer, size_t n);
 void set_nonblocking(int fd);
 int32_t read_full(int fd, void* buffer, ssize_t total_bytes);
 int32_t write_all(int fd, const void* buffer, ssize_t total_bytes);

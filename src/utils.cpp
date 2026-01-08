@@ -4,15 +4,6 @@ void msg(const char *msg) {
     fprintf(stderr, "%s\n", msg);
 }
 
-void buffer_append(std::vector<uint8_t> &buffer, const uint8_t *data, size_t len)
-{
-    buffer.insert(buffer.end(), data, data+len);
-}
-
-void buffer_consume(std::vector<uint8_t> &buffer, size_t n)
-{
-    buffer.erase(buffer.begin(), buffer.begin() + n);
-}
 
 void set_nonblocking(int fd) 
 {
@@ -71,12 +62,18 @@ int32_t send_request(int fd, const uint8_t *text, size_t len)
     if (len > MAX_MSG_SIZE) 
     {
         return -1;
-    }
+    } 
 
-    std::vector<uint8_t> wbuf;
-    buffer_append(wbuf, (const uint8_t *)&len, 4);
-    buffer_append(wbuf, text, len);
-    return write_all(fd, wbuf.data(), wbuf.size());
+    Buffer write_buffer;
+
+    // add message length and data
+    write_buffer.append(reinterpret_cast<const uint8_t*>(&len), 4);
+    write_buffer.append(text, len);
+
+    // write bytes to socket
+    int32_t written {write_all(fd, write_buffer.data(), write_buffer.size())};
+
+    return written;
 }
 
 int32_t read_result(int fd) 
