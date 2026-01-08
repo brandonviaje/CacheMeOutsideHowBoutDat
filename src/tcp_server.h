@@ -1,14 +1,19 @@
 #ifndef TCP_SERVER
 #define TCP_SERVER
 
-#include <iostream>
-#include <netinet/in.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <sys/socket.h>
-#include <thread>
-#include <unistd.h>
+#include "my_types.h"   
+#include "utils.h"      
+#include <iostream>     
+#include <string>       
+#include <stdexcept>    
+#include <cstring>      
+#include <cstdio>      
+#include <arpa/inet.h> 
+#include <netinet/in.h> 
+#include <sys/socket.h> 
+#include <unistd.h>     
+#include <errno.h>     
 
-bool create_server_connection();
+void create_server_connection();
 
 #endif

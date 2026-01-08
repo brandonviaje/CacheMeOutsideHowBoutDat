@@ -1,12 +1,11 @@
 #include "tcp_client.h"
-#include "my_types.h"
 
 bool create_client_connection()
 {
     try
     {
         // create client socket
-        int client_socket = socket(AF_INET, SOCK_STREAM, 0); // af_inet is IPV4, SOCK_STREAM is TCP, protocol is automatically chosen
+        int client_socket = socket(AF_INET, SOCK_STREAM, 0); 
 
         if (client_socket == -1)
         {
@@ -16,7 +15,7 @@ bool create_client_connection()
         // initialize server address
         sockaddr_in server_address{};
         server_address.sin_family = AF_INET;
-        server_address.sin_port = htons(PORT);
+        server_address.sin_port =  ntohs(PORT);
         
         if(inet_pton(AF_INET, "127.0.0.1", &server_address.sin_addr) <= 0)
         {
@@ -31,17 +30,16 @@ bool create_client_connection()
         {
             throw std::runtime_error("Error connecting to server");
         }   
+        
+        // multiple requests
+        if (query(client_socket, "hello1") != 0) return false;
+        if (query(client_socket, "hello2") != 0) return false;
+        if (query(client_socket, "hello3") != 0) return false;
 
-        // create a byte buffer
         close(client_socket);
         return true;
     }
 
-    catch (const std::runtime_error& e) {
-        std::cerr << "Runtime error: " << e.what() << '\n';
-        return false;   
-    }
-    
     catch (const std::exception& e) {
         std::cerr << "Exception: " << e.what() << '\n';
         return false;
@@ -50,10 +48,6 @@ bool create_client_connection()
 
 int main()
 {
-    std::cout << "Starting Client...\n";
-    if (create_client_connection())
-        std::cout << "Client Connection Created\n";
-    else
-        std::cout << "Client Connection Failed\n";
+    create_client_connection();
     return 0;
 }
