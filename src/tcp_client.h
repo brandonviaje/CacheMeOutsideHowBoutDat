@@ -2,6 +2,9 @@
 #define TCP_CLIENT
 
 #include <iostream>
+#include <stdexcept>
+#include <cstring>
+#include <arpa/inet.h>
 #include <netinet/in.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -9,6 +12,6 @@
 #include <thread>
 #include <unistd.h>
 
-void create_client_connection();
+bool create_client_connection();
 
 #endif

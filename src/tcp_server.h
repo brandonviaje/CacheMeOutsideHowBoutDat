@@ -9,6 +9,6 @@
 #include <thread>
 #include <unistd.h>
 
-void create_server_connection();
+bool create_server_connection();
 
 #endif
