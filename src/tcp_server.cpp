@@ -31,8 +31,8 @@ static int32_t process_request(int connfd)
 
     // reply
     std::string reply{"world"};          
-    uint32_t reply_len = reply.size();   
-    uint32_t net_len = htonl(reply_len);                    // convert to network byte order
+    uint32_t reply_len{static_cast<uint32_t>(reply.size())};   
+    uint32_t net_len{htonl(reply_len)};                     // convert to network byte order
 
     char write_buffer[4 + MAXCONN];                         // buffer for sending header + payload
     memcpy(write_buffer, &net_len, 4);                      // copy 4-byte length header
@@ -46,7 +46,7 @@ void create_server_connection()
     try
     {
         // create server socket
-        int server_socket = socket(AF_INET, SOCK_STREAM, 0);
+        int server_socket{socket(AF_INET, SOCK_STREAM, 0)};
 
         if(server_socket == -1)
         {
@@ -64,7 +64,7 @@ void create_server_connection()
 
         std::cout << "Listening for client connections..." << std::endl;
 
-        int status = listen(server_socket, MAXCONN);
+        int status{listen(server_socket, MAXCONN)};
 
         if(status == -1)
         {
@@ -77,8 +77,8 @@ void create_server_connection()
 
             // accept incoming client connection
             sockaddr_in client_address{};
-            socklen_t client_len = sizeof(client_address);
-            int client_connection = accept(server_socket, (struct sockaddr*)&client_address, &client_len);
+            socklen_t client_len{sizeof(client_address)};
+            int client_connection{accept(server_socket, (struct sockaddr*)&client_address, &client_len)};
 
             // check for errors
             if(client_connection == -1)
@@ -92,7 +92,7 @@ void create_server_connection()
             // serve one client connection
             while(true)
             {
-                int32_t status = process_request(client_connection);      // process client request
+                int32_t status{process_request(client_connection)};      // process client request
                 if(status)
                 {
                     break; // client disconnected or error

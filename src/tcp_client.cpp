@@ -5,7 +5,7 @@ bool create_client_connection()
     try
     {
         // create client socket
-        int client_socket = socket(AF_INET, SOCK_STREAM, 0); 
+        int client_socket{socket(AF_INET, SOCK_STREAM, 0)}; 
 
         if (client_socket == -1)
         {
@@ -15,7 +15,7 @@ bool create_client_connection()
         // initialize server address
         sockaddr_in server_address{};
         server_address.sin_family = AF_INET;
-        server_address.sin_port =  ntohs(PORT);
+        server_address.sin_port =  htons(PORT);
         
         if(inet_pton(AF_INET, "127.0.0.1", &server_address.sin_addr) <= 0)
         {
@@ -23,7 +23,7 @@ bool create_client_connection()
         }
 
         // connect to server
-        int status = connect(client_socket, (const sockaddr *)&server_address, sizeof(server_address));
+        int status { connect(client_socket, (const sockaddr *)&server_address, sizeof(server_address)) };
 
         // catch error
         if (status == -1)
