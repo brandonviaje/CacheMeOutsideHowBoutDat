@@ -2,7 +2,6 @@
 #define UTILS_H
 
 #include "my_types.h"
-#include <iostream>  
 #include <cstdio>      
 #include <cstring>     
 #include <cassert>     
@@ -10,10 +9,15 @@
 #include <sys/types.h> 
 #include <sys/socket.h> 
 #include <arpa/inet.h> 
+#include <fcntl.h>
 
 void msg(const char* msg);
-int32_t read_full(int fd, char* buffer, ssize_t total_bytes);
-int32_t write_all(int fd, const char* buffer, ssize_t total_bytes);
-int32_t query(int fd, const char *text);
+void buffer_append(std::vector<uint8_t> &buffer, const uint8_t *data, size_t len);
+void buffer_consume(std::vector<uint8_t> &buffer, size_t n);
+void set_nonblocking(int fd);
+int32_t read_full(int fd, void* buffer, ssize_t total_bytes);
+int32_t write_all(int fd, const void* buffer, ssize_t total_bytes);
+int32_t send_request(int fd, const uint8_t *text, size_t len);
+int32_t read_result(int fd);
 
 #endif

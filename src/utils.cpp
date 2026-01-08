@@ -1,81 +1,126 @@
 #include "utils.h"
 
-
 void msg(const char *msg) {
     fprintf(stderr, "%s\n", msg);
 }
 
-int32_t read_full(int fd, char* buffer, ssize_t total_bytes)
+void buffer_append(std::vector<uint8_t> &buffer, const uint8_t *data, size_t len)
 {
-    // keep reading until we've got all the bytes we need
-    while(total_bytes > 0)
-    {
-        ssize_t bytes_read { recv(fd, buffer, total_bytes, 0) };          // try to read from socket
+    buffer.insert(buffer.end(), data, data+len);
+}
 
+void buffer_consume(std::vector<uint8_t> &buffer, size_t n)
+{
+    buffer.erase(buffer.begin(), buffer.begin() + n);
+}
+
+void set_nonblocking(int fd) 
+{
+    fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) | O_NONBLOCK);
+}
+
+int32_t read_full(int fd, void* buffer, ssize_t total_bytes)
+{
+    uint8_t* buf {static_cast<uint8_t*>(buffer)}; 
+
+    while (total_bytes > 0)
+    {
+        ssize_t bytes_read = recv(fd, buf, total_bytes, 0);
         if (bytes_read == -1)
         {
-            std::cerr << "recv failed: " << strerror(errno) << '\n';    // network oops
-            return bytes_read;                                          // tell caller something went wrong
+            std::cerr << "recv failed: " << strerror(errno) << '\n';
+            return bytes_read;
         }
         else if (bytes_read == 0)
         {
-            std::cerr << "EOF\n";                                       // peer closed connection, no more data
-            return -1; 
-        }
-
-        assert(bytes_read <= total_bytes);                              // make sure we didn’t read too much
-        total_bytes -= bytes_read;                                      // decrease remaining bytes
-        buffer += bytes_read;                                           // advance buffer pointer
-    }
-
-    return 0; 
-}
-
-int32_t write_all(int fd, const char* buffer, ssize_t total_bytes)
-{
-    // keep sending until all bytes go out
-    while(total_bytes > 0)
-    {
-        ssize_t bytes_sent { send(fd, buffer, total_bytes, 0) };          // send to socket
-
-        if(bytes_sent == -1)
-        {
-            std::cerr << "send() failed: " << strerror(errno) << "\n";  // send error
+            std::cerr << "EOF\n";
             return -1;
         }
 
-        assert(bytes_sent <= total_bytes);                              // make sure we didn’t read too much
-        total_bytes -= bytes_sent;                                      // decrease remaining bytes
-        buffer += bytes_sent;                                           // advance buffer pointer
+        assert(bytes_read <= total_bytes);
+        total_bytes -= bytes_read;
+        buf += bytes_read;
     }
 
-    return 0; 
+    return 0;
 }
 
-int32_t query(int fd, const char *text) {
-    uint32_t len = strlen(text);
-    char wbuf[4 + MAXCONN];
+int32_t write_all(int fd, const void* buffer, ssize_t total_bytes)
+{
+    const uint8_t* buf {static_cast<const uint8_t*>(buffer)};
 
-    // convert header to network byte order
-    uint32_t net_len = htonl(len);
-    memcpy(wbuf, &net_len, 4);
-    memcpy(&wbuf[4], text, len);
+    while (total_bytes > 0)
+    {
+        ssize_t bytes_sent {send(fd, buf, total_bytes, 0)};
+        if (bytes_sent == -1)
+        {
+            std::cerr << "send() failed: " << strerror(errno) << "\n";
+            return -1;
+        }
 
-    // send request
-    if (write_all(fd, wbuf, 4 + len)) return -1;
+        assert(bytes_sent <= total_bytes);
+        total_bytes -= bytes_sent;
+        buf += bytes_sent;
+    }
 
-    char rbuf[4 + MAXCONN];
+    return 0;
+}
 
-    // read 4-byte header
-    if (read_full(fd, rbuf, 4)) return -1;
-    memcpy(&net_len, rbuf, 4);
-    len = ntohl(net_len);
+int32_t send_request(int fd, const uint8_t *text, size_t len)
+{
+    if (len > MAX_MSG_SIZE) 
+    {
+        return -1;
+    }
 
-    if (len > MAXCONN) return -1;
+    std::vector<uint8_t> wbuf;
+    buffer_append(wbuf, (const uint8_t *)&len, 4);
+    buffer_append(wbuf, text, len);
+    return write_all(fd, wbuf.data(), wbuf.size());
+}
 
-    // read payload (server reply)
-    if (read_full(fd, &rbuf[4], len)) return -1;
+int32_t read_result(int fd) 
+{
+    // header
+    std::vector<uint8_t> read_buffer;
+    read_buffer.resize(4);
+    errno = 0;
 
-    printf("server says: %.*s\n", len, &rbuf[4]);
+    int32_t err{read_full(fd, &read_buffer[0], 4)};
+
+    if (err) 
+    {
+        if (errno == 0) 
+        {
+            msg("EOF");
+        } 
+        else 
+        {
+            msg("read() error");
+        }
+        return err;
+    }
+
+    uint32_t len = 0;
+    memcpy(&len, read_buffer.data(), 4);  
+
+    if (len > MAX_MSG_SIZE)
+    {
+        msg("too long");
+        return -1;
+    }
+
+    // reply body
+    read_buffer.resize(4 + len);
+    err = read_full(fd, &read_buffer[4], len);
+
+    if (err) 
+    {
+        msg("read() error");
+        return err;
+    }
+
+    // TODO: do something
+    printf("len:%u data:%.*s\n", len, len < 100 ? len : 100, &read_buffer[4]);
     return 0;
 }
