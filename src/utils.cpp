@@ -4,7 +4,6 @@ void msg(const char *msg) {
     fprintf(stderr, "%s\n", msg);
 }
 
-
 void set_nonblocking(int fd) 
 {
     fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) | O_NONBLOCK);
