@@ -1,25 +1,29 @@
 #include "buffer.h"
 
-Buffer::Buffer(size_t initial_capacity) {
+Buffer::Buffer(size_t initial_capacity) 
+{
     buffer_begin = (uint8_t*)malloc(initial_capacity);
     buffer_end   = buffer_begin + initial_capacity;
     data_begin   = buffer_begin;
     data_end     = buffer_begin;
 }
 
-Buffer::~Buffer() {
+Buffer::~Buffer() 
+{
     free(buffer_begin);
     buffer_begin = buffer_end = data_begin = data_end = nullptr;
 }
 
-void Buffer::append(const uint8_t* data, size_t len) {
+void Buffer::append(const uint8_t* data, size_t len) 
+{
     size_t used {static_cast<size_t>(data_end - buffer_begin)};
     size_t capacity {static_cast<size_t>(buffer_end - buffer_begin)};
 
+    // resize if needed
     if (used + len > capacity) 
     {
         size_t new_capacity {capacity ? capacity * 2 : 1024};
-
+        
         while (new_capacity < used + len) 
         {
             new_capacity *= 2;
@@ -35,6 +39,7 @@ void Buffer::append(const uint8_t* data, size_t len) {
 
         free(buffer_begin);
 
+        // update buffer fields
         buffer_begin = new_buffer;
         buffer_end   = new_buffer + new_capacity;
         data_begin   = new_buffer;
