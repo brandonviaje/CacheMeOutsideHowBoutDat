@@ -1,4 +1,4 @@
-#include "utils.h"
+#include "../include/utils.h"
 
 void msg(const char *msg) {
     fprintf(stderr, "%s\n", msg);

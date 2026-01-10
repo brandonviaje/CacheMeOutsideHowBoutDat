@@ -1,4 +1,4 @@
-#include "hash_map.h"
+#include "../include/hash_map.h"
 
 void hashmap_migrate_keys(HashMap* hashmap)
 {

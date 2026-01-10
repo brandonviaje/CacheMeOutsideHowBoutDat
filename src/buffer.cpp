@@ -1,4 +1,4 @@
-#include "buffer.h"
+#include "../include/buffer.h"
 
 Buffer::Buffer(size_t initial_capacity) 
 {

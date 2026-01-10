@@ -1,6 +1,6 @@
-#include "tcp_server.h"
-#include "my_types.h"
-#include "utils.h"
+#include "../include/tcp_server.h"
+#include "../include/my_types.h"
+#include "../include/utils.h"
 
 bool process_request(Connection* conn)
 {
