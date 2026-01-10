@@ -1,7 +1,7 @@
-#ifndef HASHMAP_H
-#define HASHMAP_H
+#ifndef HASH_MAP_H
+#define HASH_MAP_H
 
-#include "hashtable.h"
+#include "hash_table.h"
 
 const std::size_t MAX_LOAD_FACTOR = 8;
 const std::size_t REHASHING_WORK = 128;

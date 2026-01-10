@@ -1,4 +1,4 @@
-#include "hashtable.h"
+#include "hash_table.h"
 
 // init hash table with n buckets
 void hash_table_init(HashTable * hashtable, std::size_t n)

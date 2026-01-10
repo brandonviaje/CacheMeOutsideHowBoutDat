@@ -1,5 +1,5 @@
-#ifndef HASHTABLE_H
-#define HASHTABLE_H
+#ifndef HASH_TABLE_H
+#define HASH_TABLE_H
 
 #include <cstddef>
 #include <cstdint>
