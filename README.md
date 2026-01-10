@@ -50,19 +50,6 @@ The goal is **learning-first**, not feature parity.
 
 ---
 
-## Project Structure
-
-```text
-CacheMeOutsideHowBoutDat/
-├── src/            # Implementation files
-│   ├── net/        # networking (tcp client,server)
-│   ├── core/       # core components ( RESP parser, etc)
-│   └── main.cpp
-├── tests/          # Unit & integration tests
-└── README.md
-```
----
-
 ## Tech Stack
 
 * **Language:** C++17
@@ -134,4 +121,5 @@ It is a **learning project** built to explore systems programming concepts.
 Built with curiosity and caffeine ☕
 
 If you're into systems programming, networking, or databases: welcome 👋
+
 
