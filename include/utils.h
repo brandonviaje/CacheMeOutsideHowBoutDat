@@ -3,8 +3,6 @@
 
 #include "my_types.h"
 #include "buffer.h"
-#include <cstdio>
-#include <cstring>
 #include <cassert>
 #include <cerrno>
 #include <sys/types.h>
