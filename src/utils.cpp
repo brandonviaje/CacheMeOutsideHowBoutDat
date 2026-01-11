@@ -1,17 +1,18 @@
 #include "../include/utils.h"
 
-void msg(const char *msg) {
+void msg(const char *msg)
+{
     fprintf(stderr, "%s\n", msg);
 }
 
-void set_nonblocking(int fd) 
+void set_nonblocking(int fd)
 {
     fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) | O_NONBLOCK);
 }
 
-int32_t read_full(int fd, void* buffer, ssize_t total_bytes)
+int32_t read_full(int fd, void *buffer, ssize_t total_bytes)
 {
-    uint8_t* buf {static_cast<uint8_t*>(buffer)}; 
+    uint8_t *buf{static_cast<uint8_t *>(buffer)};
 
     while (total_bytes > 0)
     {
@@ -35,13 +36,13 @@ int32_t read_full(int fd, void* buffer, ssize_t total_bytes)
     return 0;
 }
 
-int32_t write_all(int fd, const void* buffer, ssize_t total_bytes)
+int32_t write_all(int fd, const void *buffer, ssize_t total_bytes)
 {
-    const uint8_t* buf {static_cast<const uint8_t*>(buffer)};
+    const uint8_t *buf{static_cast<const uint8_t *>(buffer)};
 
     while (total_bytes > 0)
     {
-        ssize_t bytes_sent {send(fd, buf, total_bytes, 0)};
+        ssize_t bytes_sent{send(fd, buf, total_bytes, 0)};
         if (bytes_sent == -1)
         {
             std::cerr << "send() failed: " << strerror(errno) << "\n";
@@ -58,24 +59,24 @@ int32_t write_all(int fd, const void* buffer, ssize_t total_bytes)
 
 int32_t send_request(int fd, const uint8_t *text, size_t len)
 {
-    if (len > MAX_MSG_SIZE) 
+    if (len > MAX_MSG_SIZE)
     {
         return -1;
-    } 
+    }
 
     Buffer write_buffer;
 
     // add message length and data
-    write_buffer.append(reinterpret_cast<const uint8_t*>(&len), 4);
+    write_buffer.append(reinterpret_cast<const uint8_t *>(&len), 4);
     write_buffer.append(text, len);
 
     // write bytes to socket
-    int32_t written {write_all(fd, write_buffer.data(), write_buffer.size())};
+    int32_t written{write_all(fd, write_buffer.data(), write_buffer.size())};
 
     return written;
 }
 
-int32_t read_result(int fd) 
+int32_t read_result(int fd)
 {
     // header
     std::vector<uint8_t> read_buffer;
@@ -84,13 +85,13 @@ int32_t read_result(int fd)
 
     int32_t err{read_full(fd, &read_buffer[0], 4)};
 
-    if (err) 
+    if (err)
     {
-        if (errno == 0) 
+        if (errno == 0)
         {
             msg("EOF");
-        } 
-        else 
+        }
+        else
         {
             msg("read() error");
         }
@@ -98,7 +99,7 @@ int32_t read_result(int fd)
     }
 
     uint32_t len = 0;
-    memcpy(&len, read_buffer.data(), 4);  
+    memcpy(&len, read_buffer.data(), 4);
 
     if (len > MAX_MSG_SIZE)
     {
@@ -110,7 +111,7 @@ int32_t read_result(int fd)
     read_buffer.resize(4 + len);
     err = read_full(fd, &read_buffer[4], len);
 
-    if (err) 
+    if (err)
     {
         msg("read() error");
         return err;

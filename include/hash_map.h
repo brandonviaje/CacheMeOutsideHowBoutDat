@@ -13,10 +13,10 @@ struct HashMap
     std::size_t migrate_position{};
 };
 
-void hashmap_migrate_keys(HashMap* hashmap);
-void hashmap_trigger_rehashing(HashMap* hashmap);
-HashNode* hashmap_lookup(HashMap *hashmap, HashNode *key, bool (*eq)(HashNode *, HashNode *));
+void hashmap_migrate_keys(HashMap *hashmap);
+void hashmap_trigger_rehashing(HashMap *hashmap);
+HashNode *hashmap_lookup(HashMap *hashmap, HashNode *key, bool (*eq)(HashNode *, HashNode *));
 void hashmap_insert(HashMap *hashmap, HashNode *node);
-HashNode* hashmap_delete(HashMap *hashmap, HashNode *key, bool (*eq)(HashNode *, HashNode *));
+HashNode *hashmap_delete(HashMap *hashmap, HashNode *key, bool (*eq)(HashNode *, HashNode *));
 
 #endif

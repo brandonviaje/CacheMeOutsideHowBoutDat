@@ -2,13 +2,13 @@
 #include "../include/my_types.h"
 #include "../include/utils.h"
 
-bool process_request(Connection* conn)
+bool process_request(Connection *conn)
 {
     if (conn->incoming.size() < 4)
     {
         return false;
     }
-        
+
     uint32_t len{};
     std::memcpy(&len, conn->incoming.data(), 4);
 
@@ -17,21 +17,21 @@ bool process_request(Connection* conn)
     {
         msg("Too Long");
         conn->want_close = true;
-        return false;   // want close
+        return false; // want close
     }
 
     if (4 + len > conn->incoming.size())
     {
-        return false;   // want read
+        return false; // want read
     }
 
-    const uint8_t* request {conn->incoming.data() + 4};
+    const uint8_t *request{conn->incoming.data() + 4};
 
     // TODO: implement application logic with the request
     printf("client says: len:%d data:%.*s\n", len, len < 100 ? len : 100, request);
 
     // generate response
-    conn->outgoing.append(reinterpret_cast<uint8_t*>(&len), 4);
+    conn->outgoing.append(reinterpret_cast<uint8_t *>(&len), 4);
     conn->outgoing.append(request, len);
 
     // remove request message
@@ -40,13 +40,13 @@ bool process_request(Connection* conn)
     return true;
 }
 
-Connection* handle_accept(int fd)
+Connection *handle_accept(int fd)
 {
-    sockaddr_in client_address {};
-    socklen_t address_len {sizeof(client_address)};
+    sockaddr_in client_address{};
+    socklen_t address_len{sizeof(client_address)};
     int conn_fd{accept(fd, (sockaddr *)&client_address, &address_len)};
 
-    if(conn_fd == -1)
+    if (conn_fd == -1)
     {
         std::cerr << "Error accepting connection" << '\n';
         return NULL;
@@ -56,26 +56,26 @@ Connection* handle_accept(int fd)
     set_nonblocking(conn_fd);
 
     // create new struct, init and return
-    Connection* conn {new Connection()};
+    Connection *conn{new Connection()};
     conn->fd = conn_fd;
     conn->want_read = true;
 
     return conn;
 }
 
-void handle_read(Connection* conn)
+void handle_read(Connection *conn)
 {
     uint8_t buffer[64 * 1024];
-    ssize_t status {recv(conn->fd,buffer,sizeof(buffer),0)};
+    ssize_t status{recv(conn->fd, buffer, sizeof(buffer), 0)};
 
-    if(status == -1)
+    if (status == -1)
     {
         std::cerr << "Error recieving message" << '\n';
         conn->want_close = true;
         return;
     }
 
-    if(status == 0)
+    if (status == 0)
     {
         if (conn->incoming.size() == 0)
         {
@@ -91,9 +91,11 @@ void handle_read(Connection* conn)
 
     conn->incoming.append(buffer, static_cast<size_t>(status));
 
-    while(process_request(conn)) {}
+    while (process_request(conn))
+    {
+    }
 
-    if(conn->outgoing.size() > 0)
+    if (conn->outgoing.size() > 0)
     {
         conn->want_read = false;
         conn->want_write = true;
@@ -101,12 +103,12 @@ void handle_read(Connection* conn)
     }
 }
 
-void handle_write(Connection* conn)
+void handle_write(Connection *conn)
 {
     // check if outgoing is empty
-    size_t out_size {conn->outgoing.size()};
+    size_t out_size{conn->outgoing.size()};
 
-    if(out_size == 0) 
+    if (out_size == 0)
     {
         conn->want_write = false;
         conn->want_read = true;
@@ -116,13 +118,13 @@ void handle_write(Connection* conn)
     ssize_t status{send(conn->fd, conn->outgoing.data(), out_size, 0)};
 
     // check if socket is ready
-    if(status == -1 && status == EAGAIN)
+    if (status == -1 && status == EAGAIN)
     {
         return;
     }
 
     // handle error
-    if(status == -1)
+    if (status == -1)
     {
         std::cerr << "Error sending bytes to stream" << '\n';
         conn->want_close = true;
@@ -140,10 +142,10 @@ void create_server_connection()
         // create server socket
         int server_socket{socket(AF_INET, SOCK_STREAM, 0)};
 
-        if(server_socket == -1)
+        if (server_socket == -1)
         {
             throw std::runtime_error("server socket() failed");
-        } 
+        }
 
         // init server address
         sockaddr_in server_address{};
@@ -152,13 +154,13 @@ void create_server_connection()
         server_address.sin_addr.s_addr = INADDR_ANY;
 
         // bind socket
-        bind(server_socket, (const sockaddr*)&server_address, sizeof(server_address));
+        bind(server_socket, (const sockaddr *)&server_address, sizeof(server_address));
 
-        set_nonblocking(server_socket); // set fd to nonblocking 
+        set_nonblocking(server_socket); // set fd to nonblocking
 
         std::cout << "Listening for client connections..." << std::endl;
 
-        if(listen(server_socket, MAXCONN) == -1)
+        if (listen(server_socket, MAXCONN) == -1)
         {
             throw std::runtime_error("listen() failed");
         }
@@ -168,23 +170,23 @@ void create_server_connection()
 
         // event loop
         std::vector<pollfd> poll_args;
-        
+
         // listen for incoming client connections
-        while(true)
-        {   
-            
-            poll_args.clear();                                  // clear poll vector
-            struct pollfd pfd = {server_socket, POLLIN, 0};     // add server socket first so we can accept new connections
+        while (true)
+        {
+
+            poll_args.clear();                              // clear poll vector
+            struct pollfd pfd = {server_socket, POLLIN, 0}; // add server socket first so we can accept new connections
             poll_args.push_back(pfd);
 
             // loop through client connections
-            for (Connection* conn : client_connections)
+            for (Connection *conn : client_connections)
             {
-                if (!conn)  // skip if the pointer is null
+                if (!conn) // skip if the pointer is null
                 {
-                    continue;   
+                    continue;
                 }
- 
+
                 struct pollfd pfd = {conn->fd, POLLERR, 0};
 
                 // if this conn wants to read add POLLIN flag
@@ -192,7 +194,7 @@ void create_server_connection()
                 {
                     pfd.events |= POLLIN;
                 }
-                    
+
                 // if this conn wants to write add POLLOUT flag
                 if (conn->want_write)
                 {
@@ -204,23 +206,23 @@ void create_server_connection()
             }
 
             // wait for readiness
-            int status { poll(poll_args.data(), static_cast<nfds_t>(poll_args.size()), -1) };
+            int status{poll(poll_args.data(), static_cast<nfds_t>(poll_args.size()), -1)};
 
-            if(status == -1)
+            if (status == -1)
             {
                 throw std::runtime_error("Error polling for events");
             }
 
             // handle listening socket
-            if(poll_args[0].revents)
+            if (poll_args[0].revents)
             {
 
-                Connection* conn = handle_accept(server_socket);
+                Connection *conn = handle_accept(server_socket);
 
-                if(conn)
+                if (conn)
                 {
                     // put it into map
-                    if(client_connections.size() <= (size_t) conn->fd)
+                    if (client_connections.size() <= (size_t)conn->fd)
                     {
                         client_connections.resize(conn->fd + 1);
                     }
@@ -230,39 +232,39 @@ void create_server_connection()
             }
 
             // handle connection sockets
-            for(size_t i = 1; i<poll_args.size(); ++i)
+            for (size_t i = 1; i < poll_args.size(); ++i)
             {
-                uint32_t ready {static_cast<uint32_t>(poll_args[i].revents)};
-                Connection* conn {client_connections[poll_args[i].fd]};
+                uint32_t ready{static_cast<uint32_t>(poll_args[i].revents)};
+                Connection *conn{client_connections[poll_args[i].fd]};
 
                 // handle read if available
-                if(ready & POLLIN)
+                if (ready & POLLIN)
                 {
                     assert(conn->want_read);
                     handle_read(conn);
                 }
 
                 // handle write if available
-                if(ready & POLLOUT)
-                {   
+                if (ready & POLLOUT)
+                {
                     assert(conn->want_write);
                     handle_write(conn);
                 }
 
                 // close socket from err or app logic
-                if(ready & POLLERR || conn->want_close)
+                if (ready & POLLERR || conn->want_close)
                 {
                     static_cast<void>(close(conn->fd));
                     client_connections[conn->fd] = NULL;
                     delete conn;
                 }
             }
-        }   
+        }
 
         close(server_socket);
     }
 
-    catch(const std::exception& e)
+    catch (const std::exception &e)
     {
         std::cerr << "Runtime error: " << e.what() << std::endl;
     }
