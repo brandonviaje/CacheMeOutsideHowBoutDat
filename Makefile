@@ -1,6 +1,6 @@
 # Compiler
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -I./src/utils
+CXXFLAGS = CXXFLAGS = -std=c++17 -Wall -Wextra -I./include -I./src/utils
 
 # Source files
 SERVER_SRC = src/tcp_server.cpp src/utils.cpp src/buffer.cpp
