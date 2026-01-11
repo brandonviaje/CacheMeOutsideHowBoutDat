@@ -2,44 +2,6 @@
 #include "../include/my_types.h"
 #include "../include/utils.h"
 
-bool process_request(Connection *conn)
-{
-    if (conn->incoming.size() < 4)
-    {
-        return false;
-    }
-
-    uint32_t len{};
-    std::memcpy(&len, conn->incoming.data(), 4);
-
-    // reject long msg size
-    if (len > MAX_MSG_SIZE)
-    {
-        msg("Too Long");
-        conn->want_close = true;
-        return false; // want close
-    }
-
-    if (4 + len > conn->incoming.size())
-    {
-        return false; // want read
-    }
-
-    const uint8_t *request{conn->incoming.data() + 4};
-
-    // TODO: implement application logic with the request
-    printf("client says: len:%d data:%.*s\n", len, len < 100 ? len : 100, request);
-
-    // generate response
-    conn->outgoing.append(reinterpret_cast<uint8_t *>(&len), 4);
-    conn->outgoing.append(request, len);
-
-    // remove request message
-    conn->incoming.consume(4 + len);
-
-    return true;
-}
-
 Connection *handle_accept(int fd)
 {
     sockaddr_in client_address{};

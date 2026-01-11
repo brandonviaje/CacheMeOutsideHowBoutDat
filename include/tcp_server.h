@@ -4,6 +4,7 @@
 #include "my_types.h"
 #include "utils.h"
 #include "buffer.h"
+#include "request.h"
 #include <string>
 #include <stdexcept>
 #include <cstring>
@@ -25,7 +26,6 @@ struct Connection
     Buffer outgoing;
 };
 
-bool process_request(Connection *conn);
 Connection *handle_accept(int fd);
 void handle_read(Connection *conn);
 void handle_write(Connection *conn);

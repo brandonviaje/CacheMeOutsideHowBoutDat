@@ -22,11 +22,11 @@ public:
     ~Buffer();
 
     // Methods
-    void append(const uint8_t *data, size_t len);
-    void consume(size_t n);
-    void resize(size_t new_size);
-    uint8_t &operator[](size_t index);
-    const uint8_t &operator[](size_t index) const;
+    void append(const uint8_t *data, std::size_t len);
+    void consume(std::size_t n);
+    void resize(std::size_t new_size);
+    uint8_t &operator[](std::size_t index);
+    const uint8_t &operator[](std::size_t index) const;
     size_t size() const;
     uint8_t *data() const;
 };

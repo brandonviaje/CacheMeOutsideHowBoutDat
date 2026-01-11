@@ -99,7 +99,7 @@ int32_t read_result(int fd)
     }
 
     uint32_t len = 0;
-    memcpy(&len, read_buffer.data(), 4);
+    std::memcpy(&len, read_buffer.data(), 4);
 
     if (len > MAX_MSG_SIZE)
     {

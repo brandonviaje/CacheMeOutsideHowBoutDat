@@ -69,3 +69,38 @@ void output_dbl(Buffer &out, double val)
     buffer_append_u8(out, static_cast<uint8_t>(Tag::TAG_DBL));
     buffer_append_f64(out, val);
 }
+
+void output_err(Buffer &out, uint32_t code, const std::string &msg)
+{
+    // tag + error code +
+    buffer_append_u8(out, static_cast<uint8_t>(Tag::TAG_ERR));
+    buffer_append_u32(out, code);
+    buffer_append_u32(out, static_cast<uint8_t>(msg.size()));
+    buffer_append(out, reinterpret_cast<const uint8_t *>(msg.data()), msg.size());
+}
+
+void response_begin(Buffer &out, std::size_t *header)
+{
+    *header = out.size();
+    buffer_append_u32(out, *header);
+}
+
+std::size_t response_size(Buffer &out, std::size_t header)
+{
+    return out.size() - header - 4;
+}
+
+void response_end(Buffer *out, std::size_t header)
+{
+    std::size_t msg_size{response_size(*out, header)};
+
+    if (msg_size > MAX_MSG_SIZE)
+    {
+        out->resize(header + 4);
+        output_err(*out, static_cast<uint32_t>(Error::ERR_TOO_BIG), "Message is Too Long.");
+        msg_size = response_size(*out, header);
+    }
+
+    uint32_t len{msg_size};
+    std::memcpy(&out[header], &len, 4);
+}
