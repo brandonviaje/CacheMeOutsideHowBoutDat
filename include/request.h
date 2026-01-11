@@ -2,8 +2,11 @@
 #define REQUEST_H
 
 #include "tcp_server.h"
+#include "utils.h"
 #include "buffer.h"
 #include "reponse.h"
+
+struct Connection;
 
 bool process_request(Connection *conn);
 int32_t parse_request();

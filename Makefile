@@ -1,10 +1,10 @@
 # Compiler
 CXX = g++
-CXXFLAGS = CXXFLAGS = -std=c++17 -Wall -Wextra -I./include -I./src/utils
+CXXFLAGS = -std=c++17 -Wall -Wextra -I./include -I./src/utils
 
 # Source files
-SERVER_SRC = src/tcp_server.cpp src/utils.cpp src/buffer.cpp 
-CLIENT_SRC = src/tcp_client.cpp src/utils.cpp src/buffer.cpp 
+SERVER_SRC = src/tcp_server.cpp src/utils.cpp src/buffer.cpp src/hash_map.cpp src/hash_table.cpp src/hash_function.cpp src/request.cpp src/response.cpp
+CLIENT_SRC = src/tcp_client.cpp src/utils.cpp src/buffer.cpp src/hash_map.cpp src/hash_table.cpp src/hash_function.cpp src/request.cpp src/response.cpp
 
 # Output binaries
 SERVER_BIN = server

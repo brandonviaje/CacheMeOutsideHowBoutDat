@@ -2,7 +2,6 @@
 #define BUFFER_H
 
 #include "my_types.h"
-#include "utils.h"
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
