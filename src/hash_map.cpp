@@ -104,3 +104,28 @@ HashNode *hashmap_delete(HashMap *hashmap, HashNode *key, bool (*eq)(HashNode *,
 
     return nullptr; // not found
 }
+
+std::size_t hashmap_size(HashMap *hashmap)
+{
+    return hashmap->newer.size + hashmap->older.size;
+}
+
+bool hashmap_foreach(HashTable *hashtable, bool (*f)(HashNode *, void *), void *arg)
+{
+    for (std::size_t i{}; hashtable->mask != 0 && i <= hashtable->mask; i++)
+    {
+        for (HashNode *node{hashtable->table[i]}; node != NULL; node = node->next)
+        {
+            if (!f(node, arg))
+                return false;
+        }
+    }
+    return true;
+}
+
+bool entry_eq(HashNode *lhs, HashNode *rhs)
+{
+    Entry *le = container_of(lhs, struct Entry, node);
+    Entry *re = container_of(rhs, struct Entry, node);
+    return le->key == re->key;
+}
