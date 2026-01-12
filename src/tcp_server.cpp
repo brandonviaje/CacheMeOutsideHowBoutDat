@@ -30,7 +30,12 @@ void handle_read(Connection *conn)
     uint8_t buffer[64 * 1024];
     ssize_t status{recv(conn->fd, buffer, sizeof(buffer), 0)};
 
-    if (status == -1)
+    if (status < 0 && errno == EAGAIN)
+    {
+        return; // actually not ready
+    }
+
+    if (status < 0)
     {
         std::cerr << "Error recieving message" << '\n';
         conn->want_close = true;
@@ -69,34 +74,31 @@ void handle_write(Connection *conn)
 {
     assert(conn->outgoing.size() > 0);
 
+    std::cout << "handle_write: sending " << conn->outgoing.size() << " bytes\n";
+
     // check if outgoing is empty
-    size_t out_size{conn->outgoing.size()};
+    ssize_t status{send(conn->fd, conn->outgoing.data(), conn->outgoing.size(), 0)};
+    std::cout << "handle_write: actually sent " << status << " bytes\n";
 
-    ssize_t status{send(conn->fd, conn->outgoing.data(), out_size, 0)};
-
-    // check if socket is ready
-    if (status == -1 && status == EAGAIN)
+    if (status < 0)
     {
-        return;
-    }
+        if (errno == EAGAIN || errno == EWOULDBLOCK)
+            return; // socket not ready yet
 
-    // handle error
-    if (status == -1)
-    {
-        std::cerr << "Error sending bytes to stream" << '\n';
+        std::cerr << "send() failed: " << strerror(errno) << "\n";
         conn->want_close = true;
         return;
     }
 
     // remove written data from outgoing
+    std::cout << "consuming again..." << '\n';
     conn->outgoing.consume(static_cast<size_t>(status));
 
     // update readiness
-    if (out_size == 0)
+    if (conn->outgoing.size() == 0)
     {
-        conn->want_write = false;
         conn->want_read = true;
-        return;
+        conn->want_write = false;
     }
 }
 
@@ -111,6 +113,9 @@ void create_server_connection()
         {
             throw std::runtime_error("server socket() failed");
         }
+
+        int opt = 1;
+        setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
         // init server address
         sockaddr_in server_address{};
@@ -211,7 +216,17 @@ void create_server_connection()
                     continue;
                 }
 
-                Connection *conn{client_connections[poll_args[i].fd]};
+                Connection *conn = nullptr;
+                for (Connection *c : client_connections)
+                {
+                    if (c && c->fd == poll_args[i].fd)
+                    {
+                        conn = c;
+                        break;
+                    }
+                }
+                if (!conn)
+                    continue;
 
                 // handle read if available
                 if (ready & POLLIN)
@@ -236,8 +251,6 @@ void create_server_connection()
                 }
             }
         }
-
-        close(server_socket);
     }
 
     catch (const std::exception &e)

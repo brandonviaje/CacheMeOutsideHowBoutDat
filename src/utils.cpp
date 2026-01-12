@@ -10,6 +10,121 @@ void set_nonblocking(int fd)
     fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) | O_NONBLOCK);
 }
 
+int32_t print_response(const uint8_t *data, size_t size)
+{
+    if (size < 1)
+    {
+        msg("bad response");
+        return -1;
+    }
+
+    switch (static_cast<Tag>(data[0]))
+    {
+    case Tag::TAG_NIL:
+
+        printf("(nil)\n");
+        return 1;
+
+    case Tag::TAG_ERR:
+
+        if (size < 1 + 8)
+        {
+            msg("bad response");
+            return -1;
+        }
+        {
+            int32_t code{};
+            uint32_t len{};
+            memcpy(&code, &data[1], 4);
+            memcpy(&len, &data[1 + 4], 4);
+
+            if (size < 1 + 8 + len)
+            {
+                msg("bad response");
+                return -1;
+            }
+
+            printf("(err) %d %.*s\n", code, len, &data[1 + 8]);
+            return 1 + 8 + len;
+        }
+
+    case Tag::TAG_STR:
+
+        if (size < 1 + 4)
+        {
+            msg("bad response");
+            return -1;
+        }
+        {
+            uint32_t len = 0;
+            memcpy(&len, &data[1], 4);
+            if (size < 1 + 4 + len)
+            {
+                msg("bad response");
+                return -1;
+            }
+            printf("(str) %.*s\n", len, &data[1 + 4]);
+            return 1 + 4 + len;
+        }
+
+    case Tag::TAG_INT:
+
+        if (size < 1 + 8)
+        {
+            msg("bad response");
+            return -1;
+        }
+        {
+            int64_t val = 0;
+            memcpy(&val, &data[1], 8);
+            printf("(int) %ld\n", val);
+            return 1 + 8;
+        }
+
+    case Tag::TAG_DBL:
+
+        if (size < 1 + 8)
+        {
+            msg("bad response");
+            return -1;
+        }
+        {
+            double val = 0;
+            memcpy(&val, &data[1], 8);
+            printf("(dbl) %g\n", val);
+            return 1 + 8;
+        }
+
+    case Tag::TAG_ARR:
+
+        if (size < 1 + 4)
+        {
+            msg("bad response");
+            return -1;
+        }
+        {
+            uint32_t len = 0;
+            memcpy(&len, &data[1], 4);
+            printf("(arr) len=%u\n", len);
+            size_t arr_bytes = 1 + 4;
+            for (uint32_t i = 0; i < len; ++i)
+            {
+                int32_t rv = print_response(&data[arr_bytes], size - arr_bytes);
+                if (rv < 0)
+                {
+                    return rv;
+                }
+                arr_bytes += (size_t)rv;
+            }
+            printf("(arr) end\n");
+            return (int32_t)arr_bytes;
+        }
+    default:
+        msg("bad response");
+        return -1;
+    }
+}
+
 int32_t read_full(int fd, void *buffer, ssize_t total_bytes)
 {
     uint8_t *buf{static_cast<uint8_t *>(buffer)};
@@ -57,68 +172,59 @@ int32_t write_all(int fd, const void *buffer, ssize_t total_bytes)
     return 0;
 }
 
-int32_t send_request(int fd, const uint8_t *text, size_t len)
+int32_t send_request(int fd, const std::vector<std::string> &cmd)
 {
-    if (len > MAX_MSG_SIZE)
-    {
-        return -1;
-    }
-
     Buffer write_buffer;
 
-    // add message length and data
-    write_buffer.append(reinterpret_cast<const uint8_t *>(&len), 4);
-    write_buffer.append(text, len);
+    // number of strings
+    uint32_t nstr = htonl(static_cast<uint32_t>(cmd.size()));
+    write_buffer.append(reinterpret_cast<uint8_t *>(&nstr), 4);
 
-    // write bytes to socket
-    int32_t written{write_all(fd, write_buffer.data(), write_buffer.size())};
+    // each string: 4-byte length + string data
+    for (const auto &s : cmd)
+    {
+        uint32_t slen = htonl(static_cast<uint32_t>(s.size()));
+        write_buffer.append(reinterpret_cast<uint8_t *>(&slen), 4);
+        write_buffer.append(reinterpret_cast<const uint8_t *>(s.data()), s.size());
+    }
 
-    return written;
+    // prepend total length (of remaining message) for your protocol
+    uint32_t total_len = htonl(static_cast<uint32_t>(write_buffer.size()));
+    Buffer final_buffer;
+    final_buffer.append(reinterpret_cast<uint8_t *>(&total_len), 4);
+    final_buffer.append(write_buffer.data(), write_buffer.size());
+
+    return write_all(fd, final_buffer.data(), final_buffer.size());
 }
 
 int32_t read_result(int fd)
 {
-    // header
-    std::vector<uint8_t> read_buffer;
-    read_buffer.resize(4);
-    errno = 0;
-
-    int32_t err{read_full(fd, &read_buffer[0], 4)};
-
-    if (err)
-    {
-        if (errno == 0)
-        {
-            msg("EOF");
-        }
-        else
-        {
-            msg("read() error");
-        }
-        return err;
-    }
+    std::vector<uint8_t> read_buffer(4);
+    if (read_full(fd, &read_buffer[0], 4) != 0)
+        return -1;
 
     uint32_t len{};
     std::memcpy(&len, read_buffer.data(), 4);
+    len = ntohl(len);
 
     if (len > MAX_MSG_SIZE)
     {
-        msg("too long");
+        msg("Response too big");
         return -1;
     }
 
-    // reply body
     read_buffer.resize(4 + len);
-    err = read_full(fd, &read_buffer[4], len);
 
-    if (err)
+    if (read_full(fd, &read_buffer[4], len) != 0)
+        return -1;
+
+    int32_t status = print_response(&read_buffer[4], len); // TLV parser
+
+    if (status > 0 && (uint32_t)status != len)
     {
-        msg("read() error");
-        return err;
+        msg("bad response");
+        return -1;
     }
-
-    // TODO: do something
-    printf("len:%u data:%.*s\n", len, len < 100 ? len : 100, &read_buffer[4]);
     return 0;
 }
 
@@ -197,17 +303,16 @@ void output_err(Buffer &out, uint32_t code, const std::string &msg)
     // tag + error code +
     buffer_append_u8(out, static_cast<uint8_t>(Tag::TAG_ERR));
     buffer_append_u32(out, code);
-    buffer_append_u32(out, static_cast<uint8_t>(msg.size()));
+    buffer_append_u32(out, static_cast<uint32_t>(msg.size()));
     buffer_append(out, reinterpret_cast<const uint8_t *>(msg.data()), msg.size());
 }
 
 bool read_u32(const uint8_t *&cur, const uint8_t *end, uint32_t &out)
 {
     if (cur + 4 > end)
-    {
         return false;
-    }
-    memcpy(&out, cur, 4);
+    std::memcpy(&out, cur, 4);
+    out = ntohl(out);
     cur += 4;
     return true;
 }
@@ -218,7 +323,7 @@ bool read_str(const uint8_t *&cur, const uint8_t *end, size_t n, std::string &ou
     {
         return false;
     }
-    out.assign(cur, cur + n);
+    out.assign(reinterpret_cast<const char *>(cur), n);
     cur += n;
     return true;
 }

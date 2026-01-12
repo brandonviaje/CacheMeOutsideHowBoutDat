@@ -15,9 +15,10 @@
 
 void msg(const char *msg);
 void set_nonblocking(int fd);
+int32_t print_response(const uint8_t *data, size_t size);
 int32_t read_full(int fd, void *buffer, ssize_t total_bytes);
 int32_t write_all(int fd, const void *buffer, ssize_t total_bytes);
-int32_t send_request(int fd, const uint8_t *text, std::size_t len);
+int32_t send_request(int fd, const std::vector<std::string> &cmd);
 int32_t read_result(int fd);
 
 void buffer_append_u8(Buffer &buffer, uint8_t data);

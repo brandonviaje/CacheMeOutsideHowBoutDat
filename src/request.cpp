@@ -9,6 +9,7 @@ bool process_request(Connection *conn)
 
     uint32_t len{};
     std::memcpy(&len, conn->incoming.data(), 4);
+    len = ntohl(len);
 
     // reject long msg size
     if (len > MAX_MSG_SIZE)
@@ -38,7 +39,7 @@ bool process_request(Connection *conn)
     std::size_t header_position{};
     response_begin(conn->outgoing, &header_position);
     exec_request(cmd, conn->outgoing);
-    response_end(&conn->outgoing, header_position);
+    response_end(conn->outgoing, header_position);
 
     // remove request message
     conn->incoming.consume(4 + len);
@@ -62,6 +63,7 @@ int32_t parse_request(const uint8_t *data, std::size_t size, std::vector<std::st
         uint32_t len{};
         if (!read_u32(data, end, len))
             return -1;
+
         out.push_back(std::string());
 
         if (!read_str(data, end, len, out.back()))
@@ -153,7 +155,7 @@ void exec_request(std::vector<std::string> &cmd, Buffer &out)
     }
     else if (cmd.size() == 1 && cmd[0] == "keys")
     {
-        std::cout << "KEYS command" << '\n';
+        output_arr(out, 0);
     }
     else
     {

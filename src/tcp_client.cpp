@@ -1,6 +1,6 @@
 #include "../include/tcp_client.h"
 
-bool create_client_connection()
+bool create_client_connection(int argc, char **argv)
 {
     try
     {
@@ -31,32 +31,28 @@ bool create_client_connection()
             throw std::runtime_error("Error connecting to server");
         }
 
-        // multiple pipelined requests
-        std::vector<std::string> query_list{
-            "hello1", "hello2", "hello3", std::string(MAX_MSG_SIZE, 'z'), "hello5"};
+        std::vector<std::string> cmd;
 
-        // send all requests to server
-        for (const std::string &s : query_list)
+        for (int i = 1; i < argc; ++i)
         {
-            int32_t err = send_request(client_socket, (uint8_t *)s.data(), s.size());
-
-            if (err)
-            {
-                close(client_socket);
-                return false;
-            }
+            cmd.push_back(argv[i]);
         }
 
-        // read all responses from server
-        for (size_t i = 0; i < query_list.size(); ++i)
-        {
-            int32_t err = read_result(client_socket);
+        // send request
+        int32_t err = send_request(client_socket, cmd);
 
-            if (err)
-            {
-                close(client_socket);
-                return false;
-            }
+        if (err == -1)
+        {
+            close(client_socket);
+            return false;
+        }
+
+        err = read_result(client_socket);
+
+        if (err == -1)
+        {
+            close(client_socket);
+            return false;
         }
 
         close(client_socket);
@@ -70,8 +66,8 @@ bool create_client_connection()
     }
 }
 
-int main()
+int main(int argc, char **argv)
 {
-    create_client_connection();
+    create_client_connection(argc, argv);
     return 0;
 }
