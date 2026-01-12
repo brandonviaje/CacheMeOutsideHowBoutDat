@@ -112,9 +112,9 @@ std::size_t hashmap_size(HashMap *hashmap)
 
 bool entry_eq(HashNode *lhs, HashNode *rhs)
 {
-    Entry *le = container_of(lhs, Entry, node);
-    Entry *re = container_of(rhs, Entry, node);
-    return le->key == re->key;
+    Entry *left_entry = container_of(lhs, Entry, node);
+    Entry *right_entry = container_of(rhs, Entry, node);
+    return left_entry->key == right_entry->key;
 }
 
 void hashmap_foreach(HashMap *hashmap, bool (*f)(HashNode *, void *), void *arg)

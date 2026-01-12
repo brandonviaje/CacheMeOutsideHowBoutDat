@@ -78,7 +78,7 @@ void get_value(std::vector<std::string> &cmd, Buffer &out)
 {
     // create key for lookup
     Entry key;
-    key.key.swap(cmd[1]);
+    key.key = cmd[1];
     key.node.hash_code = str_hash((uint8_t *)key.key.data(), key.key.size());
 
     // lookup in hashtable
@@ -87,7 +87,7 @@ void get_value(std::vector<std::string> &cmd, Buffer &out)
     if (!node)
         return output_nil(out);
 
-    const std::string &val{container_of(node, Entry, val)->val};
+    const std::string &val{container_of(node, Entry, node)->val};
     return output_str(out, val.data());
 }
 
@@ -95,7 +95,7 @@ void set_value(std::vector<std::string> &cmd, Buffer &out)
 {
     // create key for lookup
     Entry key;
-    key.key.swap(cmd[1]);
+    key.key = cmd[1];
     key.node.hash_code = str_hash((uint8_t *)key.key.data(), key.key.size());
 
     // lookup in hashtable
@@ -123,7 +123,7 @@ void del_value(std::vector<std::string> &cmd, Buffer &out)
 {
     // create key for lookup
     Entry key;
-    key.key.swap(cmd[1]);
+    key.key = cmd[1];
     key.node.hash_code = str_hash((uint8_t *)key.key.data(), key.key.size());
 
     // delete node from hashtable
