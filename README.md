@@ -19,11 +19,11 @@ The goal is **learning-first**, not feature parity.
 
 ## Goals
 
-* ✅ Implement a Redis-style TCP server
-* ✅ Support core data types
-* ✅ Design a clean, scalable C++ project structure
-* ⏳ Add persistence (RDB / AOF-style)
-* ⏳ Optimize for speed and low latency
+* Implement Redis-style TCP server
+* Support core data types
+* Design a clean, scalable C++ project structure
+* Add persistence (RDB / AOF-style)
+* Optimize for speed and low latency
 
 ---
 
@@ -143,6 +143,7 @@ It is a **pet project** built to explore systems programming concepts.
 Built with curiosity and caffeine ☕
 
 If you're into systems programming, networking, or databases: welcome 👋
+
 
 
 
