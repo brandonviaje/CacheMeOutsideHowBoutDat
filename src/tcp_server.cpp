@@ -32,7 +32,7 @@ void handle_read(Connection *conn)
 
     if (status < 0 && errno == EAGAIN)
     {
-        return; // actually not ready
+        return; // not ready
     }
 
     if (status < 0)
@@ -74,13 +74,10 @@ void handle_write(Connection *conn)
 {
     assert(conn->outgoing.size() > 0);
 
-    std::cout << "handle_write: sending " << conn->outgoing.size() << " bytes\n";
-
     // check if outgoing is empty
     ssize_t status{send(conn->fd, conn->outgoing.data(), conn->outgoing.size(), 0)};
-    std::cout << "handle_write: actually sent " << status << " bytes\n";
 
-    if (status < 0)
+    if (status == -1)
     {
         if (errno == EAGAIN || errno == EWOULDBLOCK)
             return; // socket not ready yet
@@ -91,7 +88,6 @@ void handle_write(Connection *conn)
     }
 
     // remove written data from outgoing
-    std::cout << "consuming again..." << '\n';
     conn->outgoing.consume(static_cast<size_t>(status));
 
     // update readiness

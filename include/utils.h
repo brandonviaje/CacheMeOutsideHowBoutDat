@@ -13,7 +13,6 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 
-void msg(const char *msg);
 void set_nonblocking(int fd);
 int32_t print_response(const uint8_t *data, size_t size);
 int32_t read_full(int fd, void *buffer, ssize_t total_bytes);

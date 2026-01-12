@@ -14,7 +14,7 @@ bool process_request(Connection *conn)
     // reject long msg size
     if (len > MAX_MSG_SIZE)
     {
-        msg("Too Long");
+        std::cout << "Message size too long" << '\n';
         conn->want_close = true;
         return false; // want close
     }

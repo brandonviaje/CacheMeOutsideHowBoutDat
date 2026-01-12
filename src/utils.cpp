@@ -1,10 +1,5 @@
 #include "../include/utils.h"
 
-void msg(const char *msg)
-{
-    fprintf(stderr, "%s\n", msg);
-}
-
 void set_nonblocking(int fd)
 {
     fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) | O_NONBLOCK);
@@ -14,22 +9,21 @@ int32_t print_response(const uint8_t *data, size_t size)
 {
     if (size < 1)
     {
-        msg("bad response");
+        std::cout << "bad response" << '\n';
         return -1;
     }
 
     switch (static_cast<Tag>(data[0]))
     {
     case Tag::TAG_NIL:
-
-        printf("(nil)\n");
+        std::cout << "(nil)" << '\n';
         return 1;
 
     case Tag::TAG_ERR:
 
         if (size < 1 + 8)
         {
-            msg("bad response");
+            std::cout << "bad response" << '\n';
             return -1;
         }
         {
@@ -40,7 +34,7 @@ int32_t print_response(const uint8_t *data, size_t size)
 
             if (size < 1 + 8 + len)
             {
-                msg("bad response");
+                std::cout << "bad response" << '\n';
                 return -1;
             }
 
@@ -52,7 +46,7 @@ int32_t print_response(const uint8_t *data, size_t size)
 
         if (size < 1 + 4)
         {
-            msg("bad response");
+            std::cout << "bad response" << '\n';
             return -1;
         }
         {
@@ -60,7 +54,7 @@ int32_t print_response(const uint8_t *data, size_t size)
             memcpy(&len, &data[1], 4);
             if (size < 1 + 4 + len)
             {
-                msg("bad response");
+                std::cout << "bad response" << '\n';
                 return -1;
             }
             printf("(str) %.*s\n", len, &data[1 + 4]);
@@ -71,7 +65,7 @@ int32_t print_response(const uint8_t *data, size_t size)
 
         if (size < 1 + 8)
         {
-            msg("bad response");
+            std::cout << "bad response" << '\n';
             return -1;
         }
         {
@@ -85,7 +79,7 @@ int32_t print_response(const uint8_t *data, size_t size)
 
         if (size < 1 + 8)
         {
-            msg("bad response");
+            std::cout << "bad response" << '\n';
             return -1;
         }
         {
@@ -99,7 +93,7 @@ int32_t print_response(const uint8_t *data, size_t size)
 
         if (size < 1 + 4)
         {
-            msg("bad response");
+            std::cout << "bad response" << '\n';
             return -1;
         }
         {
@@ -120,7 +114,7 @@ int32_t print_response(const uint8_t *data, size_t size)
             return (int32_t)arr_bytes;
         }
     default:
-        msg("bad response");
+        std::cout << "bad response" << '\n';
         return -1;
     }
 }
@@ -209,7 +203,7 @@ int32_t read_result(int fd)
 
     if (len > MAX_MSG_SIZE)
     {
-        msg("Response too big");
+        std::cout << "Response too big" << '\n';
         return -1;
     }
 
@@ -222,7 +216,7 @@ int32_t read_result(int fd)
 
     if (status > 0 && (uint32_t)status != len)
     {
-        msg("bad response");
+        std::cout << "bad response" << '\n';
         return -1;
     }
     return 0;
