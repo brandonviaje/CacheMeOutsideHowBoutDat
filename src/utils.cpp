@@ -321,3 +321,11 @@ bool read_str(const uint8_t *&cur, const uint8_t *end, size_t n, std::string &ou
     cur += n;
     return true;
 }
+
+bool write_key(HashNode *node, void *arg) 
+{ 
+    Buffer &out { *static_cast<Buffer *>(arg)}; 
+    const std::string &key {container_of(node, Entry, node)->key}; 
+    output_str(out, key.data()); 
+    return true; 
+}

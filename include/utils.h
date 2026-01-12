@@ -2,6 +2,7 @@
 #define UTILS_H
 
 #include "buffer.h"
+#include "hash_map.h"
 #include "my_types.h"
 #include <cstring>
 #include <string>
@@ -35,5 +36,5 @@ void output_err(Buffer &out, uint32_t code, const std::string &msg);
 
 bool read_u32(const uint8_t *&cur, const uint8_t *end, uint32_t &out);
 bool read_str(const uint8_t *&cur, const uint8_t *end, size_t n, std::string &out);
-
+bool write_key(HashNode *node, void *arg);
 #endif

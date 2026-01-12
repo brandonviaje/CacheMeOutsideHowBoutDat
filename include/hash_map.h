@@ -24,8 +24,8 @@ struct Entry
 
 struct
 {
-    HashMap db;
-} g_Data;
+    HashMap database;
+} g_KeyStore;
 
 void hashmap_migrate_keys(HashMap *hashmap);
 void hashmap_trigger_rehashing(HashMap *hashmap);
