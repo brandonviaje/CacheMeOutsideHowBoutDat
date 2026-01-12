@@ -162,28 +162,37 @@ void db_size(Buffer &out)
 
 void exec_request(std::vector<std::string> &cmd, Buffer &out)
 {
-    if (cmd.size() == 2 && cmd[0] == "get")
+    if (cmd.empty()) 
+    {
+        return output_err(out, static_cast<uint32_t>(Error::ERR_UNKNOWN), "Empty Command");
+    }
+
+    // convert to lowercase
+    std::string command {cmd[0]};
+    std::transform(command.begin(), command.end(), command.begin(), [](unsigned char c) { return std::tolower(c); });
+
+    if (cmd.size() == 2 && command == "get")
     {
         return get_value(cmd, out);
     }
-    else if (cmd.size() == 3 && cmd[0] == "set")
+    else if (cmd.size() == 3 && command == "set")
     {
         return set_value(cmd, out);
     }
-    else if (cmd.size() == 2 && cmd[0] == "del")
+    else if (cmd.size() == 2 && command == "del")
     {
         return del_value(cmd, out);
     }
-    else if (cmd.size() == 1 && cmd[0] == "keys")
+    else if (cmd.size() == 1 && command == "keys")
     {
         return list_keys(out);
     }
-    else if (cmd.size() == 1 && cmd[0] == "dbsize")
+    else if (cmd.size() == 1 && command == "dbsize")
     {
         return db_size(out);
     }
     else
     {
-        return output_err(out, static_cast<uint32_t>(Error::ERR_UNKNOWN), "Unkown Command");
+        return output_err(out, static_cast<uint32_t>(Error::ERR_UNKNOWN), "Unknown Command");
     }
 }
