@@ -1,6 +1,6 @@
 # CacheMeOutsideHowBoutDat
 
-> A personal systems-level project where I build my own Redis-like in-memory data store in **C++**, focusing on performance, networking, and clean architecture.
+> A personal systems-level project where I build my own in-memory data store in **C++**, focusing on performance, networking, and clean architecture.
 
 ---
 
@@ -121,6 +121,7 @@ It is a **learning project** built to explore systems programming concepts.
 Built with curiosity and caffeine ☕
 
 If you're into systems programming, networking, or databases: welcome 👋
+
 
 
 
