@@ -28,7 +28,8 @@ HashNode *hashmap_lookup(HashMap *hashmap, HashNode *key, bool (*eq)(HashNode *,
 void hashmap_insert(HashMap *hashmap, HashNode *node);
 std::size_t hashmap_size(HashMap *hashmap);
 HashNode *hashmap_delete(HashMap *hashmap, HashNode *key, bool (*eq)(HashNode *, HashNode *));
-bool hashmap_foreach(HashTable *hashtable, bool (*f)(HashNode *, void *), void *arg);
+bool hashtable_foreach(HashTable *hashtable, bool (*f)(HashNode *, void *), void *arg);
+bool hashmap_foreach(HashMap *hashmap, bool (*f)(HashNode *, void *), void *arg);
 bool entry_eq(HashNode *lhs, HashNode *rhs);
 
 #endif

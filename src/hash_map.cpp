@@ -110,7 +110,7 @@ std::size_t hashmap_size(HashMap *hashmap)
     return hashmap->newer.size + hashmap->older.size;
 }
 
-bool hashmap_foreach(HashTable *hashtable, bool (*f)(HashNode *, void *), void *arg)
+bool hashtable_foreach(HashTable *hashtable, bool (*f)(HashNode *, void *), void *arg)
 {
     for (std::size_t i{}; hashtable->mask != 0 && i <= hashtable->mask; i++)
     {
@@ -128,4 +128,9 @@ bool entry_eq(HashNode *lhs, HashNode *rhs)
     Entry *le = container_of(lhs, struct Entry, node);
     Entry *re = container_of(rhs, struct Entry, node);
     return le->key == re->key;
+}
+
+bool hashmap_foreach(HashMap *hashmap, bool (*f)(HashNode *, void *), void *arg)
+{
+    hashtable_foreach(&hashmap->newer, f, arg) && hashtable_foreach(&hashmap->older, f, arg);
 }
