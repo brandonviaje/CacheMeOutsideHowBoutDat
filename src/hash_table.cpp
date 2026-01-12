@@ -67,3 +67,16 @@ HashNode *hash_node_delete(HashTable *hashtable, HashNode **from)
 
     return node; // return deleted node
 }
+
+bool hashtable_foreach(HashTable *hashtable, bool (*f)(HashNode *, void *), void *arg)
+{
+    for (std::size_t i{}; hashtable->mask != 0 && i <= hashtable->mask; i++)
+    {
+        for (HashNode *node{hashtable->table[i]}; node != NULL; node = node->next)
+        {
+            if (!f(node, arg))
+                return false;
+        }
+    }
+    return true;
+}
