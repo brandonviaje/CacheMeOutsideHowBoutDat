@@ -25,14 +25,20 @@ bool process_request(Connection *conn)
 
     const uint8_t *request{conn->incoming.data() + 4};
 
+    std::vector<std::string> cmd;
+
     // parse request, add to buffer
+    if (parse_request(request, len, cmd) == -1)
+    {
+        std::cout << "Bad Request" << '\n';
+        conn->want_close = true;
+        return false;
+    }
 
-    //  TODO: implement application logic with the request
-    printf("client says: len:%d data:%.*s\n", len, len < 100 ? len : 100, request);
-
-    // generate response
-    conn->outgoing.append(reinterpret_cast<uint8_t *>(&len), 4);
-    conn->outgoing.append(request, len);
+    std::size_t header_position{};
+    response_begin(conn->outgoing, &header_position);
+    exec_request(cmd, conn->outgoing);
+    response_end(&conn->outgoing, header_position);
 
     // remove request message
     conn->incoming.consume(4 + len);
@@ -40,8 +46,31 @@ bool process_request(Connection *conn)
     return true;
 }
 
-int32_t parse_request()
+int32_t parse_request(const uint8_t *data, std::size_t size, std::vector<std::string> &out)
 {
+    const uint8_t *end = data + size;
+    uint32_t nstr{};
+
+    if (!read_u32(data, end, nstr))
+        return -1;
+
+    if (nstr > MAX_ARGS)
+        return -1;
+
+    while (out.size() < nstr)
+    {
+        uint32_t len{};
+        if (!read_u32(data, end, len))
+            return -1;
+        out.push_back(std::string());
+
+        if (!read_str(data, end, len, out.back()))
+            return -1;
+    }
+
+    if (data != end)
+        return -1;
+
     return 0;
 }
 

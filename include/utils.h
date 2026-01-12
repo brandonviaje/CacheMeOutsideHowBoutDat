@@ -33,4 +33,7 @@ void output_dbl(Buffer &out, double val);
 void output_nil(Buffer &out);
 void output_err(Buffer &out, uint32_t code, const std::string &msg);
 
+bool read_u32(const uint8_t *&cur, const uint8_t *end, uint32_t &out);
+bool read_str(const uint8_t *&cur, const uint8_t *end, size_t n, std::string &out);
+
 #endif

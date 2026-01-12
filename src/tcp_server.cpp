@@ -67,15 +67,10 @@ void handle_read(Connection *conn)
 
 void handle_write(Connection *conn)
 {
+    assert(conn->outgoing.size() > 0);
+
     // check if outgoing is empty
     size_t out_size{conn->outgoing.size()};
-
-    if (out_size == 0)
-    {
-        conn->want_write = false;
-        conn->want_read = true;
-        return;
-    }
 
     ssize_t status{send(conn->fd, conn->outgoing.data(), out_size, 0)};
 
@@ -95,6 +90,14 @@ void handle_write(Connection *conn)
 
     // remove written data from outgoing
     conn->outgoing.consume(static_cast<size_t>(status));
+
+    // update readiness
+    if (out_size == 0)
+    {
+        conn->want_write = false;
+        conn->want_read = true;
+        return;
+    }
 }
 
 void create_server_connection()
@@ -170,6 +173,11 @@ void create_server_connection()
             // wait for readiness
             int status{poll(poll_args.data(), static_cast<nfds_t>(poll_args.size()), -1)};
 
+            if (status == -1 && errno == EINTR)
+            {
+                continue;
+            }
+
             if (status == -1)
             {
                 throw std::runtime_error("Error polling for events");
@@ -194,9 +202,15 @@ void create_server_connection()
             }
 
             // handle connection sockets
-            for (size_t i = 1; i < poll_args.size(); ++i)
+            for (size_t i{1}; i < poll_args.size(); ++i)
             {
                 uint32_t ready{static_cast<uint32_t>(poll_args[i].revents)};
+
+                if (ready == 0)
+                {
+                    continue;
+                }
+
                 Connection *conn{client_connections[poll_args[i].fd]};
 
                 // handle read if available

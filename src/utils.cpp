@@ -98,7 +98,7 @@ int32_t read_result(int fd)
         return err;
     }
 
-    uint32_t len {};
+    uint32_t len{};
     std::memcpy(&len, read_buffer.data(), 4);
 
     if (len > MAX_MSG_SIZE)
@@ -201,3 +201,24 @@ void output_err(Buffer &out, uint32_t code, const std::string &msg)
     buffer_append(out, reinterpret_cast<const uint8_t *>(msg.data()), msg.size());
 }
 
+bool read_u32(const uint8_t *&cur, const uint8_t *end, uint32_t &out)
+{
+    if (cur + 4 > end)
+    {
+        return false;
+    }
+    memcpy(&out, cur, 4);
+    cur += 4;
+    return true;
+}
+
+bool read_str(const uint8_t *&cur, const uint8_t *end, size_t n, std::string &out)
+{
+    if (cur + n > end)
+    {
+        return false;
+    }
+    out.assign(cur, cur + n);
+    cur += n;
+    return true;
+}
