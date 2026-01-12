@@ -33,19 +33,24 @@ The goal is **learning-first**, not feature parity.
 
 * Basic TCP server
 * Client request handling
-* Command parsing (WIP)
-
-### In Progress
-
+* Command parsing
 * Key-value store (`SET`, `GET`)
 * In-memory hash table
 * Connection handling
+* Event loop (poll)
+
+### In Progress
+
+* Sorted set data structure (`ZADD`, `ZRANGE`, `ZREM`)
+* Command parsing for sorted set operations
+* Efficient score-based ordering
+* Memory management and item eviction strategies
+* Handling edge cases and error responses for new commands
 
 ### Planned
 
 * Expiring keys (TTL)
 * Persistence (snapshot + append-only log)
-* Event loop (select / poll / epoll)
 * Replication (stretch goal)
 
 ---
@@ -61,12 +66,38 @@ The goal is **learning-first**, not feature parity.
 
 ## Building & Running
 
+### 1. Build the project
 ```bash
-mkdir build
-cd build
-cmake ..
 make
-./redis
+```
+### 2. Run the server
+```bash
+./server
+```
+
+### 3. Run the client
+```bash
+./client
+```
+
+Send a single command directly:
+
+```bash
+./client "SET key value"
+./client "GET key"
+```
+
+### Example workflow:
+
+```bash
+# Terminal 1: start server
+./server
+
+# Terminal 2: connect with client
+./client
+> SET name GOAT
+> GET name
+GOAT
 ```
 
 ---
@@ -103,16 +134,7 @@ Testing will include:
 ## Disclaimer
 
 This is **not** a production-ready Redis replacement.
-It is a **learning project** built to explore systems programming concepts.
-
----
-
-## Roadmap
-
-* [ ] Core KV commands
-* [ ] Persistence layer
-* [ ] Event loop
-* [ ] Performance profiling
+It is a **pet project** built to explore systems programming concepts.
 
 ---
 
@@ -121,6 +143,7 @@ It is a **learning project** built to explore systems programming concepts.
 Built with curiosity and caffeine ☕
 
 If you're into systems programming, networking, or databases: welcome 👋
+
 
 
 
