@@ -2,6 +2,7 @@
 #define HASH_FUNCTION_H
 
 #include <cstdint>
-void MurmurHash3_x64_128(const void *key, const int len, const uint32_t seed, void *out);
+#include <string>
+uint64_t str_hash(const uint8_t *data, std::size_t len);
 
 #endif

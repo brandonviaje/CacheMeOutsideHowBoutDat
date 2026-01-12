@@ -22,6 +22,11 @@ struct Entry
     std::string val;
 };
 
+struct
+{
+    HashMap db;
+} g_Data;
+
 void hashmap_migrate_keys(HashMap *hashmap);
 void hashmap_trigger_rehashing(HashMap *hashmap);
 HashNode *hashmap_lookup(HashMap *hashmap, HashNode *key, bool (*eq)(HashNode *, HashNode *));

@@ -112,8 +112,8 @@ std::size_t hashmap_size(HashMap *hashmap)
 
 bool entry_eq(HashNode *lhs, HashNode *rhs)
 {
-    Entry *le = container_of(lhs, struct Entry, node);
-    Entry *re = container_of(rhs, struct Entry, node);
+    Entry *le = container_of(lhs, Entry, node);
+    Entry *re = container_of(rhs, Entry, node);
     return le->key == re->key;
 }
 

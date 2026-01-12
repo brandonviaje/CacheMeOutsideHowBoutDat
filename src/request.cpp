@@ -74,19 +74,82 @@ int32_t parse_request(const uint8_t *data, std::size_t size, std::vector<std::st
     return 0;
 }
 
+void get_value(std::vector<std::string> &cmd, Buffer &out)
+{
+    // create key for lookup
+    Entry key;
+    key.key.swap(cmd[1]);
+    key.node.hash_code = str_hash((uint8_t *)key.key.data(), key.key.size());
+
+    // lookup in hashtable
+    HashNode *node{hashmap_lookup(&g_Data.db, &key.node, &entry_eq)};
+
+    if (!node)
+        return output_nil(out);
+
+    const std::string &val{container_of(node, Entry, val)->val};
+    return output_str(out, val.data());
+}
+
+void set_value(std::vector<std::string> &cmd, Buffer &out)
+{
+    // create key for lookup
+    Entry key;
+    key.key.swap(cmd[1]);
+    key.node.hash_code = str_hash((uint8_t *)key.key.data(), key.key.size());
+
+    // lookup in hashtable
+    HashNode *node{hashmap_lookup(&g_Data.db, &key.node, &entry_eq)};
+
+    // if found set new value
+    if (node)
+    {
+        container_of(node, Entry, node)->val.swap(cmd[2]);
+    }
+    else
+    {
+        // else insert a new pair
+        Entry *entry{new Entry()};
+        entry->key.swap(key.key);
+        entry->node.hash_code = key.node.hash_code;
+        entry->val.swap(cmd[2]);
+        hashmap_insert(&g_Data.db, &entry->node);
+    }
+
+    return output_nil(out);
+}
+
+void del_value(std::vector<std::string> &cmd, Buffer &out)
+{
+    // create key for lookup
+    Entry key;
+    key.key.swap(cmd[1]);
+    key.node.hash_code = str_hash((uint8_t *)key.key.data(), key.key.size());
+
+    // delete node from hashtable
+    HashNode *node{hashmap_delete(&g_Data.db, &key.node, &entry_eq)};
+
+    if (node)
+    {
+        delete container_of(node, Entry, node);
+    }
+
+    return output_int(out, node ? 1 : 0);
+}
+
 void exec_request(std::vector<std::string> &cmd, Buffer &out)
 {
     if (cmd.size() == 2 && cmd[0] == "get")
     {
-        std::cout << "GET command" << '\n';
+        return get_value(cmd, out);
     }
     else if (cmd.size() == 3 && cmd[0] == "set")
     {
-        std::cout << "SET command" << '\n';
+        return set_value(cmd, out);
     }
     else if (cmd.size() == 2 && cmd[0] == "del")
     {
-        std::cout << "DEL command" << '\n';
+        return del_value(cmd, out);
     }
     else if (cmd.size() == 1 && cmd[0] == "keys")
     {
