@@ -39,10 +39,10 @@ bool process_request(Connection *conn)
         return false;
     }
 
-    std::size_t header_position{}; 
-    response_begin(conn->outgoing, &header_position);   // prepare response
-    exec_request(cmd, conn->outgoing);                  // exec command and write result
-    response_end(conn->outgoing, header_position);      // finalize response
+    std::size_t header_position{};
+    response_begin(conn->outgoing, &header_position); // prepare response
+    exec_request(cmd, conn->outgoing);                // exec command and write result
+    response_end(conn->outgoing, header_position);    // finalize response
 
     // remove processed request from incoming buffer
     conn->incoming.consume(4 + len);
@@ -52,8 +52,8 @@ bool process_request(Connection *conn)
 
 int32_t parse_request(const uint8_t *data, std::size_t size, std::vector<std::string> &out)
 {
-    const uint8_t *end = data + size;   // ptr to end of buffer
-    uint32_t nstr{};                    // num of strings expected in request
+    const uint8_t *end = data + size; // ptr to end of buffer
+    uint32_t nstr{};                  // num of strings expected in request
 
     // read first 4 bytes as the number of strings
     if (!read_u32(data, end, nstr))
@@ -62,23 +62,23 @@ int32_t parse_request(const uint8_t *data, std::size_t size, std::vector<std::st
     if (nstr > MAX_ARGS)
         return -1;
 
-    // keep reading strings until we've read all 
+    // keep reading strings until we've read all
     while (out.size() < nstr)
     {
-        uint32_t len{};                     // len of next string
+        uint32_t len{}; // len of next string
 
         // read next 4 bytes as length of this string
         if (!read_u32(data, end, len))
             return -1;
 
-        out.push_back(std::string());       // add empty string to vector
+        out.push_back(std::string()); // add empty string to vector
 
         // read `len` bytes from the buffer and store it in the last string in `out`
         if (!read_str(data, end, len, out.back()))
             return -1;
     }
 
-    // make sure to consume all the data 
+    // make sure to consume all the data
     if (data != end)
         return -1;
 
@@ -90,7 +90,7 @@ void get_value(std::vector<std::string> &cmd, Buffer &out)
     // create key for lookup
     Entry key;
     key.key = cmd[1];
-    key.node.hash_code = str_hash((uint8_t *)key.key.data(), key.key.size());
+    key.node.hash_code = hash::xxhash64(reinterpret_cast<const uint8_t *>(key.key.data()), key.key.size());
 
     // lookup in hashtable
     HashNode *node{hashmap_lookup(&g_KeyStore.database, &key.node, &entry_eq)};
@@ -107,7 +107,7 @@ void set_value(std::vector<std::string> &cmd, Buffer &out)
     // create key for lookup
     Entry key;
     key.key = cmd[1];
-    key.node.hash_code = str_hash((uint8_t *)key.key.data(), key.key.size());
+    key.node.hash_code = hash::xxhash64(reinterpret_cast<const uint8_t *>(key.key.data()), key.key.size());
 
     // lookup in hashtable
     HashNode *node{hashmap_lookup(&g_KeyStore.database, &key.node, &entry_eq)};
@@ -135,7 +135,7 @@ void del_value(std::vector<std::string> &cmd, Buffer &out)
     // create key for lookup
     Entry key;
     key.key = cmd[1];
-    key.node.hash_code = str_hash((uint8_t *)key.key.data(), key.key.size());
+    key.node.hash_code = hash::xxhash64(reinterpret_cast<const uint8_t *>(key.key.data()), key.key.size());
 
     // delete node from hashtable
     HashNode *node{hashmap_delete(&g_KeyStore.database, &key.node, &entry_eq)};
@@ -148,28 +148,29 @@ void del_value(std::vector<std::string> &cmd, Buffer &out)
     return output_int(out, node ? 1 : 0);
 }
 
-void list_keys(Buffer &out) 
+void list_keys(Buffer &out)
 {
-    output_arr(out, static_cast<uint32_t>(hashmap_size(&g_KeyStore.database)));     // write num of keys in the database to buffer
-    hashmap_foreach(&g_KeyStore.database, &write_key, static_cast<void *>(&out));   // iterate over every key in hasmap, write key into buffer
+    output_arr(out, static_cast<uint32_t>(hashmap_size(&g_KeyStore.database)));   // write num of keys in the database to buffer
+    hashmap_foreach(&g_KeyStore.database, &write_key, static_cast<void *>(&out)); // iterate over every key in hasmap, write key into buffer
 }
 
 void db_size(Buffer &out)
 {
-    auto num_keys {static_cast<uint32_t>(hashmap_size(&g_KeyStore.database))};      // count num of keys in database
-    output_int(out, num_keys);                                                      // write to buffer
+    auto num_keys{static_cast<uint32_t>(hashmap_size(&g_KeyStore.database))}; // count num of keys in database
+    output_int(out, num_keys);                                                // write to buffer
 }
 
 void exec_request(std::vector<std::string> &cmd, Buffer &out)
 {
-    if (cmd.empty()) 
+    if (cmd.empty())
     {
         return output_err(out, static_cast<uint32_t>(Error::ERR_UNKNOWN), "Empty Command");
     }
 
     // convert to lowercase
-    std::string command {cmd[0]};
-    std::transform(command.begin(), command.end(), command.begin(), [](unsigned char c) { return std::tolower(c); });
+    std::string command{cmd[0]};
+    std::transform(command.begin(), command.end(), command.begin(), [](unsigned char c)
+                   { return std::tolower(c); });
 
     if (cmd.size() == 2 && command == "get")
     {
